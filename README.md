@@ -148,19 +148,3 @@ Please ensure tests pass and linting is clean before opening a PR.
 
 This project is licensed under the [MIT License](LICENSE).
 
-````
-
----
-
-### .env.example
-
-```dotenv
-# Discord bot token (create at https://discord.com/developers/applications)
-DISCORD_TOKEN=your_discord_bot_token_here
-
-# ID of the channel where liquidity TL;DR will be posted
-LIQUIDITY_CHANNEL_ID=123456789012345678
-
-# (Optional) Set to "production" or "development"
-NODE_ENV=development
-
