@@ -1,0 +1,45 @@
+{
+    "name": "near-defi-bot",
+    "version": "1.0.0",
+    "description": "Discord bot for NEARMobile DeFi stats (liquidity pools, lending/borrowing APRs, etc.)",
+    "main": "dist/main.js",
+    "scripts": {
+      "build": "tsc",
+      "start": "node dist/main.js",
+      "dev": "ts-node-dev --respawn --transpile-only apps/bot/src/main.ts",
+      "pm2": "pm2 start ecosystem.config.js",
+      "report": "sh generate_report.sh",
+      "lint": "eslint . --ext .ts,.js",
+      "test": "jest"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/yourusername/near-defi-bot.git"
+    },
+    "keywords": [
+      "discord",
+      "defi",
+      "near",
+      "ref-finance",
+      "bot"
+    ],
+    "author": "",
+    "license": "MIT",
+    "dependencies": {
+      "axios": "^1.4.0",
+      "discord.js": "^14.0.0",
+      "dotenv": "^16.0.0"
+    },
+    "devDependencies": {
+      "@types/jest": "^29.0.0",
+      "@typescript-eslint/eslint-plugin": "^5.0.0",
+      "@typescript-eslint/parser": "^5.0.0",
+      "eslint": "^8.0.0",
+      "jest": "^29.0.0",
+      "ts-jest": "^29.0.0",
+      "ts-node": "^10.9.1",
+      "ts-node-dev": "^2.0.0",
+      "typescript": "^5.1.6"
+    }
+  }
+  

@@ -1,0 +1,27 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Environment
+.env
+
+# PM2 logs
+pm2.log
+pm2.pid
+
+# Repo report
+repo_report.txt
+
+# OS files
+.DS_Store
+
+# Editors & IDEs
+.vscode/
+.idea/
+*.swp
