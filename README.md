@@ -1,18 +1,18 @@
 # near-defi-bot
 
 Discord bot for NEARMobile DeFi stats (liquidity pools, lending/borrowing APRs, etc.)  
-Posts a TL;DR of TVL, 24 h volume, and top pools to a designated channel and keeps it updated.
+Posts a TL;DR of TVL, 24h volume, and top pools (by TVL, volume, and APY) to a designated channel and keeps it updated every 30 minutes.
 
 ---
 
 ## 🚀 Features
 
-- Fetches global stats (TVL & 24 h volume) from Ref Finance  
-- Retrieves top-N liquidity pools by TVL  
+- Fetches global stats (TVL & 24h volume) from Ref Finance  
+- Retrieves top-N liquidity pools by TVL, 24h volume & APY  
 - Posts a rich Markdown TL;DR in a pinned message  
 - Automatically edits the pinned message on updates or bot restarts  
+- Simple cron-based refresh every 30 minutes  
 - Easy to extend with new modules (lending, borrowing, etc.)  
-- Runs under PM2 or Docker  
 
 ---
 
@@ -20,19 +20,24 @@ Posts a TL;DR of TVL, 24 h volume, and top pools to a designated channel and kee
 
 - **Node.js** v18+  
 - **npm** or **yarn**  
-- A Discord Bot token with **Send Messages**, **Manage Messages**, and **Pin Messages** permissions  
+- A Discord Bot token with **Send Messages**, **Manage Messages**, **Pin Messages**, and **Embed Links** permissions  
+- **PM2** installed globally:  
+  ```bash
+  npm install -g pm2
+````
 
 ---
 
 ## ⚙️ Installation
 
-1. Clone the repo:  
+1. **Clone** your repo and enter it:
+
    ```bash
    git clone https://github.com/yourusername/near-defi-bot.git
    cd near-defi-bot
-````
+   ```
 
-2. Install dependencies:
+2. **Install** dependencies:
 
    ```bash
    npm install
@@ -40,13 +45,14 @@ Posts a TL;DR of TVL, 24 h volume, and top pools to a designated channel and kee
    yarn install
    ```
 
-3. Copy the example env and fill in your values:
+3. **Configure** environment:
 
    ```bash
    cp .env.example .env
+   # then edit .env to set DISCORD_TOKEN & LIQUIDITY_CHANNEL_ID
    ```
 
-4. Build the TypeScript sources:
+4. **Build** TypeScript sources:
 
    ```bash
    npm run build
@@ -62,42 +68,36 @@ Posts a TL;DR of TVL, 24 h volume, and top pools to a designated channel and kee
 npm run dev
 ```
 
-Runs the bot with `ts-node-dev` and auto-reloads on file changes.
+Runs the bot with auto-reload (`ts-node-dev`).
 
-### Production
+### Production on Your Server
 
-Start via PM2:
-
-```bash
-npm run pm2
-```
-
-Or directly:
+After cloning, installing, setting up `.env` and building:
 
 ```bash
-npm start
+# from your repo root
+pm2 start npm --name near-defi-bot -- run dev
 ```
 
-### Docker
+This tells PM2 to:
 
-```bash
-docker build -f docker/bot.Dockerfile -t near-defi-bot .
-docker run --env-file .env near-defi-bot
-```
+1. Invoke `npm run dev`
+2. Keep the process alive and auto-restart on crashes
+3. Label the process `near-defi-bot` for easy `pm2 logs`, `pm2 stop`, etc.
 
 ---
 
 ## 📑 Scripts
 
-| Command          | Description                                       |
-| ---------------- | ------------------------------------------------- |
-| `npm run build`  | Compile TypeScript → JavaScript                   |
-| `npm start`      | Run built bot (`dist/main.js`)                    |
-| `npm run dev`    | Run in dev mode with auto-reload                  |
-| `npm run pm2`    | Start under PM2 (uses `ecosystem.config.js`)      |
-| `npm run report` | Generate `repo_report.txt` (tree + file contents) |
-| `npm run lint`   | Lint code via ESLint                              |
-| `npm test`       | Run Jest test suite                               |
+| Command           | Description                                       |
+| ----------------- | ------------------------------------------------- |
+| `npm run build`   | Compile TypeScript → JavaScript                   |
+| `npm start`       | Run compiled bot (`node dist/main.js`)            |
+| `npm run dev`     | Run in dev mode with auto-reload                  |
+| **`pm2 start …`** | Start under PM2 (see Production section)          |
+| `npm run report`  | Generate `repo_report.txt` (tree + file contents) |
+| `npm run lint`    | Lint code via ESLint                              |
+| `npm test`        | Run Jest test suite                               |
 
 ---
 
@@ -120,9 +120,9 @@ near-defi-bot/
 │       │           └── utils.ts
 │       └── test
 │           └── modules/liquidity/liquidity.service.spec.ts
-├── docker/bot.Dockerfile
 ├── ecosystem.config.js
 ├── generate_report.sh
+├── jest.config.js
 ├── package.json
 ├── tsconfig.json
 └── packages/shared
@@ -147,4 +147,3 @@ Please ensure tests pass and linting is clean before opening a PR.
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
-

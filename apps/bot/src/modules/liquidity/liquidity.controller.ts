@@ -18,7 +18,7 @@ export class LiquidityController {
     for (const p of pools) {
       const combo = p.tokenSymbols.join('-');
       lines.push(
-        `| [${combo}](https://app.ref.finance/pool/${p.id}) | ` +
+        `| [${combo}](https://dex.rhea.finance/pool/${p.id}) | ` +
           `$${formatCurrency(p.tvl)} | ` +
           `$${formatCurrency(p.volume24h)} | ` +
           `+${formatPercent(p.totalApy)}% |`
