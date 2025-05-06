@@ -21,12 +21,14 @@ describe('LiquidityService', () => {
 
     const result = await svc.getGlobalStats();
     expect(result).toEqual<GlobalStats>({ tvl: 123.45, volume24h: 67.89 });
-    expect(mockedAxios.get).toHaveBeenCalledWith('https://api.ref.finance/all-pool-data');
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'https://api.ref.finance/all-pool-data'
+    );
   });
 
   const listItem = {
     id: '1',
-    token_symbols: ['AAA','BBB'],
+    token_symbols: ['AAA', 'BBB'],
     tvl: '1000',
     volume_24h: '200',
     apy: '5',
@@ -34,15 +36,14 @@ describe('LiquidityService', () => {
   };
 
   it('getTopPoolsByTvl returns correct Pool[] with totalApy', async () => {
-    const fake = { code: 0, data: { list: [ listItem ] } };
+    const fake = { code: 0, data: { list: [listItem] } };
     mockedAxios.get.mockResolvedValueOnce({ data: fake });
 
     const pools = await svc.getTopPoolsByTvl(1);
     expect(pools).toHaveLength(1);
-    const p = pools[0];
-    expect(p).toMatchObject<Pool>({
+    expect(pools[0]).toMatchObject<Pool>({
       id: '1',
-      tokenSymbols: ['AAA','BBB'],
+      tokenSymbols: ['AAA', 'BBB'],
       tvl: 1000,
       volume24h: 200,
       apy: 5,
@@ -55,15 +56,14 @@ describe('LiquidityService', () => {
   });
 
   it('getTopPoolsByVolume returns correct Pool[] with totalApy', async () => {
-    const fake = { code: 0, data: { list: [ listItem ] } };
+    const fake = { code: 0, data: { list: [listItem] } };
     mockedAxios.get.mockResolvedValueOnce({ data: fake });
 
     const pools = await svc.getTopPoolsByVolume(1);
     expect(pools).toHaveLength(1);
-    const p = pools[0];
-    expect(p).toMatchObject<Pool>({
+    expect(pools[0]).toMatchObject<Pool>({
       id: '1',
-      tokenSymbols: ['AAA','BBB'],
+      tokenSymbols: ['AAA', 'BBB'],
       tvl: 1000,
       volume24h: 200,
       apy: 5,
@@ -75,24 +75,24 @@ describe('LiquidityService', () => {
     );
   });
 
-  it('getTopPoolsByApy returns correct Pool[] with totalApy', async () => {
-    const fake = { code: 0, data: { list: [ listItem ] } };
+  it('getTopPoolsByApy fetches 20 then picks top by totalApy', async () => {
+    const fake = { code: 0, data: { list: [listItem] } };
     mockedAxios.get.mockResolvedValueOnce({ data: fake });
 
     const pools = await svc.getTopPoolsByApy(1);
     expect(pools).toHaveLength(1);
-    const p = pools[0];
-    expect(p).toMatchObject<Pool>({
+    expect(pools[0]).toMatchObject<Pool>({
       id: '1',
-      tokenSymbols: ['AAA','BBB'],
+      tokenSymbols: ['AAA', 'BBB'],
       tvl: 1000,
       volume24h: 200,
       apy: 5,
       farmApy: 2.5,
       totalApy: 7.5,
     });
+    // note: always requests limit=20 when sorting by apy
     expect(mockedAxios.get).toHaveBeenCalledWith(
-      expect.stringContaining('/pool/search?type=classic&sort=apy&limit=1')
+      expect.stringContaining('/pool/search?type=classic&sort=apy&limit=20')
     );
   });
 });

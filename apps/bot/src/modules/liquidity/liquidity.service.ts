@@ -22,22 +22,22 @@ export class LiquidityService {
   /**
    * Generic fetch helper: sort by "tvl", "24h" (24h volume), or "apy"
    * @param sort one of 'tvl' | '24h' | 'apy'
-   * @param limit max number of pools
+   * @param fetchLimit how many to fetch from the API
    */
   private async fetchTopPools(
     sort: 'tvl' | '24h' | 'apy',
-    limit = 4
+    fetchLimit: number
   ): Promise<Pool[]> {
     const resp = await axios.get<{
       code: number;
       data: { list: any[] };
     }>(
       `${this.apiBase}/pool/search` +
-        `?type=classic&sort=${sort}&limit=${limit}` +
+        `?type=classic&sort=${sort}&limit=${fetchLimit}` +
         `&labels=&offset=0&hide_low_pool=true&order_by=desc`
     );
 
-    return resp.data.data.list.slice(0, limit).map((item) => {
+    return resp.data.data.list.map((item) => {
       const apy = Number(item.apy);
       const farmApy = Number(item.farm_apy);
       return {
@@ -54,16 +54,23 @@ export class LiquidityService {
 
   /** Top pools sorted by TVL */
   getTopPoolsByTvl(limit = 4): Promise<Pool[]> {
-    return this.fetchTopPools('tvl', limit);
+    // API itself sorts by tvl desc, so just fetch `limit` items
+    return this.fetchTopPools('tvl', limit).then((arr) => arr.slice(0, limit));
   }
 
   /** Top pools sorted by 24h volume */
   getTopPoolsByVolume(limit = 4): Promise<Pool[]> {
-    return this.fetchTopPools('24h', limit);
+    // API itself sorts by 24h desc, so just fetch `limit` items
+    return this.fetchTopPools('24h', limit).then((arr) => arr.slice(0, limit));
   }
 
-  /** Top pools sorted by combined APY (base + farm) */
-  getTopPoolsByApy(limit = 4): Promise<Pool[]> {
-    return this.fetchTopPools('apy', limit);
+  /**
+   * Top pools sorted by combined APY (base + farm).
+   * We fetch more (20) so we can pick the true top by totalApy.
+   */
+  async getTopPoolsByApy(limit = 4): Promise<Pool[]> {
+    const all = await this.fetchTopPools('apy', 20);
+    // sort by totalApy descending, then take top `limit`
+    return all.sort((a, b) => b.totalApy - a.totalApy).slice(0, limit);
   }
 }
