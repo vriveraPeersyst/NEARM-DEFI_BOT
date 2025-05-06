@@ -24,19 +24,20 @@ describe('LiquidityService', () => {
     expect(mockedAxios.get).toHaveBeenCalledWith('https://api.ref.finance/all-pool-data');
   });
 
-  it('getTopPools returns correct Pool[] with totalApy', async () => {
-    const listItem = {
-      id: '1',
-      token_symbols: ['AAA','BBB'],
-      tvl: '1000',
-      volume_24h: '200',
-      apy: '5',
-      farm_apy: '2.5',
-    };
+  const listItem = {
+    id: '1',
+    token_symbols: ['AAA','BBB'],
+    tvl: '1000',
+    volume_24h: '200',
+    apy: '5',
+    farm_apy: '2.5',
+  };
+
+  it('getTopPoolsByTvl returns correct Pool[] with totalApy', async () => {
     const fake = { code: 0, data: { list: [ listItem ] } };
     mockedAxios.get.mockResolvedValueOnce({ data: fake });
 
-    const pools = await svc.getTopPools(1);
+    const pools = await svc.getTopPoolsByTvl(1);
     expect(pools).toHaveLength(1);
     const p = pools[0];
     expect(p).toMatchObject<Pool>({
@@ -50,6 +51,48 @@ describe('LiquidityService', () => {
     });
     expect(mockedAxios.get).toHaveBeenCalledWith(
       expect.stringContaining('/pool/search?type=classic&sort=tvl&limit=1')
+    );
+  });
+
+  it('getTopPoolsByVolume returns correct Pool[] with totalApy', async () => {
+    const fake = { code: 0, data: { list: [ listItem ] } };
+    mockedAxios.get.mockResolvedValueOnce({ data: fake });
+
+    const pools = await svc.getTopPoolsByVolume(1);
+    expect(pools).toHaveLength(1);
+    const p = pools[0];
+    expect(p).toMatchObject<Pool>({
+      id: '1',
+      tokenSymbols: ['AAA','BBB'],
+      tvl: 1000,
+      volume24h: 200,
+      apy: 5,
+      farmApy: 2.5,
+      totalApy: 7.5,
+    });
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/pool/search?type=classic&sort=24h&limit=1')
+    );
+  });
+
+  it('getTopPoolsByApy returns correct Pool[] with totalApy', async () => {
+    const fake = { code: 0, data: { list: [ listItem ] } };
+    mockedAxios.get.mockResolvedValueOnce({ data: fake });
+
+    const pools = await svc.getTopPoolsByApy(1);
+    expect(pools).toHaveLength(1);
+    const p = pools[0];
+    expect(p).toMatchObject<Pool>({
+      id: '1',
+      tokenSymbols: ['AAA','BBB'],
+      tvl: 1000,
+      volume24h: 200,
+      apy: 5,
+      farmApy: 2.5,
+      totalApy: 7.5,
+    });
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/pool/search?type=classic&sort=apy&limit=1')
     );
   });
 });

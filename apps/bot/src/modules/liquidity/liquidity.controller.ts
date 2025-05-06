@@ -3,88 +3,111 @@
 import { TextChannel, Message } from 'discord.js';
 import { LiquidityService } from './liquidity.service';
 import { formatCurrency, formatPercent } from './utils';
-import { Pool } from './types'; // Ensure this path points to where Pool is defined
+import { Pool } from './types';
 
 export class LiquidityController {
   private readonly messageTag = '# :ocean:・Liquidity Pools TL;DR';
 
   constructor(private readonly service: LiquidityService) {}
 
-  /** Build the TL;DR payload */
+  /** Renders a Markdown table for a list of pools */
+  private buildPoolTable(pools: Pool[]): string[] {
+    const lines: string[] = [];
+    lines.push('| Pool | TVL | Volume (24h) | APR |');
+    lines.push('| ---- | --- | ------------ | --- |');
+    for (const p of pools) {
+      const combo = p.tokenSymbols.join('-');
+      lines.push(
+        `| [${combo}](https://app.ref.finance/pool/${p.id}) | ` +
+          `$${formatCurrency(p.tvl)} | ` +
+          `$${formatCurrency(p.volume24h)} | ` +
+          `+${formatPercent(p.totalApy)}% |`
+      );
+    }
+    return lines;
+  }
+
+  /**
+   * Builds the full message content including:
+   *  - Global stats
+   *  - Top by TVL
+   *  - Top by 24h volume
+   *  - Top by APY
+   */
   private buildContent(
     stats: { tvl: number; volume24h: number },
-    pools: Pool[]
+    byTvl: Pool[],
+    byVol: Pool[],
+    byApy: Pool[]
   ): string {
     const lines: string[] = [];
     lines.push(this.messageTag);
     lines.push('');
-    lines.push('**Welcome to Rhea Finance on NEAR!**  ');
+    lines.push('**Welcome! All data below is updated in real-time.**  ');
+    lines.push('');
     lines.push(
-      'Here you can **Trade, Earn, Bridge**, and soon **Lend** — all through liquidity pools.'
+      'Here you can provide liquidity and **earn** — all through liquidity pools.'
     );
     lines.push('');
     lines.push(`- **TVL:** **$${formatCurrency(stats.tvl)}**  `);
     lines.push(`- **24h Volume:** **$${formatCurrency(stats.volume24h)}**  `);
     lines.push('');
-    lines.push('### :person_swimming: Pool Types');
-    lines.push('- **Classic:** Uniswap v2 style pairs');
-    lines.push('- **Stable:** Curve’s stable asset pools');
-    lines.push('- **Degen:** High-risk, high-reward pools');
-    lines.push('- **DCL:** Concentrated liquidity for pros');
-    lines.push('- **Watchlist:** Save your favorite pools');
+
+    lines.push('### :bar_chart: Top Pools by TVL');
+    lines.push(...this.buildPoolTable(byTvl));
     lines.push('');
-    lines.push('### :star2: Top Pools Today');
-    lines.push('| Pool | TVL | Volume (24h) | APR |');
-    lines.push('| ---- | ---- | ---- | ---- |');
-    pools.forEach((p) => {
-      const name = p.tokenSymbols.join('-');
-      lines.push(
-        `| [${name}](https://app.ref.finance/pool/${p.id}) | ` +
-          `$${formatCurrency(p.tvl)} | ` +
-          `$${formatCurrency(p.volume24h)} | ` +
-          `+${formatPercent(p.totalApy)}% |`
-      );
-    });
+
+    lines.push('### :chart_with_upwards_trend: Top Pools by 24h Volume');
+    lines.push(...this.buildPoolTable(byVol));
     lines.push('');
+
+    lines.push('### :zap: Top Pools by APY');
+    lines.push(...this.buildPoolTable(byApy));
+    lines.push('');
+
     lines.push('> :jigsaw: **Boosted Farms** and **Reward Points** available!');
     lines.push('');
     lines.push('### :warning: Risks');
     lines.push('Providing liquidity carries **Impermanent Loss (IL)** risk.');
+
     return lines.join('\n');
   }
 
-  /** Look for an existing pinned TL;DR message */
+  /** Locate an existing pinned TL;DR message (if any) */
   private async findPinnedTLDR(channel: TextChannel): Promise<Message | null> {
     const pinned = await channel.messages.fetchPinned();
-    const existing = pinned.find(
-      (msg) =>
-        msg.author.id === channel.client.user?.id &&
-        msg.content.startsWith(this.messageTag)
+    return (
+      pinned.find(
+        (msg) =>
+          msg.author.id === channel.client.user?.id &&
+          msg.content.startsWith(this.messageTag)
+      ) ?? null
     );
-    return existing ?? null;
   }
 
   /**
-   * On each run (including after a restart) we:
-   * 1. Fetch global stats + top pools
-   * 2. Look for a pinned TL;DR; if found, edit it
-   * 3. Otherwise send & pin a fresh one
+   * Posts a new message or edits the existing pinned one
+   * to include TVL, Volume, and APY tables.
    */
   async postOrUpdate(channel: TextChannel): Promise<void> {
     const stats = await this.service.getGlobalStats();
-    const pools = await this.service.getTopPools(4);
-    const content = this.buildContent(stats, pools);
+    const [byTvl, byVol, byApy] = await Promise.all([
+      this.service.getTopPoolsByTvl(4),
+      this.service.getTopPoolsByVolume(4),
+      this.service.getTopPoolsByApy(4),
+    ]);
 
+    const content = this.buildContent(stats, byTvl, byVol, byApy);
     const existing = await this.findPinnedTLDR(channel);
+
     if (existing) {
       await existing.edit(content);
     } else {
       const msg = await channel.send(content);
-      // Pin it so on next restart we can find it
       try {
         await msg.pin();
       } catch {
-        // ensure the bot has the "Manage Messages" / "Pin Messages" permission
+        // Ensure bot has "Manage Messages"/"Pin Messages" permission
       }
     }
   }

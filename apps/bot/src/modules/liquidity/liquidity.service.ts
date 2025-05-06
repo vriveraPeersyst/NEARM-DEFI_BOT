@@ -19,14 +19,21 @@ export class LiquidityService {
     };
   }
 
-  /** Fetch top-n classic pools sorted by TVL */
-  async getTopPools(limit = 4): Promise<Pool[]> {
+  /**
+   * Generic fetch helper: sort by "tvl", "24h" (24h volume), or "apy"
+   * @param sort one of 'tvl' | '24h' | 'apy'
+   * @param limit max number of pools
+   */
+  private async fetchTopPools(
+    sort: 'tvl' | '24h' | 'apy',
+    limit = 4
+  ): Promise<Pool[]> {
     const resp = await axios.get<{
       code: number;
       data: { list: any[] };
     }>(
       `${this.apiBase}/pool/search` +
-        `?type=classic&sort=tvl&limit=${limit}` +
+        `?type=classic&sort=${sort}&limit=${limit}` +
         `&labels=&offset=0&hide_low_pool=true&order_by=desc`
     );
 
@@ -43,5 +50,20 @@ export class LiquidityService {
         totalApy: apy + farmApy,
       };
     });
+  }
+
+  /** Top pools sorted by TVL */
+  getTopPoolsByTvl(limit = 4): Promise<Pool[]> {
+    return this.fetchTopPools('tvl', limit);
+  }
+
+  /** Top pools sorted by 24h volume */
+  getTopPoolsByVolume(limit = 4): Promise<Pool[]> {
+    return this.fetchTopPools('24h', limit);
+  }
+
+  /** Top pools sorted by combined APY (base + farm) */
+  getTopPoolsByApy(limit = 4): Promise<Pool[]> {
+    return this.fetchTopPools('apy', limit);
   }
 }
