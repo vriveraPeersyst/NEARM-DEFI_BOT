@@ -19,7 +19,7 @@ export class LiquidityController {
     for (const p of pools) {
       const combo = p.tokenSymbols.join('-');
       lines.push(
-        `| [${combo}](https://dex.rhea.finance/pool/${p.id}) | ` +
+        `| [${combo}](https://app.rhea.finance/pool/${p.id}) | ` +
           `$${formatCurrency(p.tvl)} | ` +
           `$${formatCurrency(p.volume24h)} | ` +
           `+${formatPercent(p.totalApy)}% |`
@@ -46,32 +46,21 @@ export class LiquidityController {
     lines.push('');
     lines.push(`*Last updated: ${formatUTCTime(this.lastUpdateTime.getTime())}*`);
     lines.push('');
-    lines.push('**Welcome! All data below is updated in real-time.**  ');
-    lines.push('');
-    lines.push(
-      'Here you can provide liquidity and **earn** — all through liquidity pools.'
-    );
+    lines.push('**Real-time liquidity data from Rhea DEX**  ');
     lines.push('');
     lines.push(`- **TVL:** **$${formatCurrency(stats.tvl)}**  `);
     lines.push(`- **24h Volume:** **$${formatCurrency(stats.volume24h)}**  `);
     lines.push('');
 
     lines.push('### :bar_chart: Top Pools by TVL');
-    lines.push(...this.buildPoolTable(byTvl));
-    lines.push('');
-
-    lines.push('### :chart_with_upwards_trend: Top Pools by 24h Volume');
-    lines.push(...this.buildPoolTable(byVol));
+    lines.push(...this.buildPoolTable(byTvl.slice(0, 3)));
     lines.push('');
 
     lines.push('### :zap: Top Pools by APY');
-    lines.push(...this.buildPoolTable(byApy));
+    lines.push(...this.buildPoolTable(byApy.slice(0, 3)));
     lines.push('');
 
-    lines.push('> :jigsaw: **Boosted Farms** and **Reward Points** available!');
-    lines.push('');
-    lines.push('### :warning: Risks');
-    lines.push('Providing liquidity carries **Impermanent Loss (IL)** risk.');
+    lines.push('> :jigsaw: **Boosted Farms** available on [Rhea DEX](https://app.rhea.finance/)');
 
     return lines.join('\n');
   }

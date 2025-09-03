@@ -11,9 +11,9 @@ export class LendingController {
 
   constructor(private readonly service: LendingService) {}
 
-  /** Generate the correct Rhea Finance URL for a token */
+  /** Generate the correct Rhea Lending URL for a token */
   private getTokenUrl(tokenName: string): string {
-    return `https://app.rhea.finance/tokenDetail/${tokenName}?pageType=main`;
+    return `https://app.rhea.finance/lending/tokenDetail/${tokenName}?pageType=main`;
   }
 
   /** Renders a Markdown table for a list of lending tokens */
@@ -67,10 +67,8 @@ export class LendingController {
   /**
    * Builds the full message content including:
    *  - Global stats
-   *  - Top by Supplied
-   *  - Top by Borrowed
-   *  - Top by Supply APY
-   *  - Top by Utilization
+   *  - Top by Supply APY (reduced to 3)
+   *  - Top by Utilization (reduced to 3)
    */
   public buildContent(
     stats: { totalSupplied: number; totalBorrowed: number; totalAvailableLiquidity: number },
@@ -87,34 +85,23 @@ export class LendingController {
     lines.push('**Welcome! All lending data below is updated in real-time.**  ');
     lines.push('');
     lines.push(
-      'Here you can **lend** your assets to earn interest and **borrow** against your collateral.'
+      'Here you can **lend** your assets to earn interest and **borrow** against your collateral on [Rhea Lending](https://app.rhea.finance/lending).'
     );
     lines.push('');
-    lines.push(`- **Total Supplied:** **$${formatCurrency(stats.totalSupplied)}**  `);
-    lines.push(`- **Total Borrowed:** **$${formatCurrency(stats.totalBorrowed)}**  `);
-    lines.push(`- **Available Liquidity:** **$${formatCurrency(stats.totalAvailableLiquidity)}**  `);
+    lines.push(`- **Total Supplied:** **$${formatCompactCurrency(stats.totalSupplied)}**  `);
+    lines.push(`- **Total Borrowed:** **$${formatCompactCurrency(stats.totalBorrowed)}**  `);
+    lines.push(`- **Available Liquidity:** **$${formatCompactCurrency(stats.totalAvailableLiquidity)}**  `);
     lines.push('');
 
     lines.push('### :chart_with_upwards_trend: Top Markets by Supplied');
     lines.push(...this.buildLendingTable(bySupplied, 'supply'));
     lines.push('');
 
-    lines.push('### :money_with_wings: Top Markets by Borrowed');
-    lines.push(...this.buildLendingTable(byBorrowed, 'borrow'));
-    lines.push('');
-
     lines.push('### :zap: Highest Supply APY');
     lines.push(...this.buildLendingTable(bySupplyApy, 'supply'));
     lines.push('');
 
-    lines.push('### :fire: Highest Utilization');
-    lines.push(...this.buildLendingTable(byUtilization, 'utilization'));
-    lines.push('');
-
-    lines.push('> :star2: **Lending Rewards** and **NEAR Ecosystem Benefits** available!');
-    lines.push('');
-    lines.push('### :warning: Risks');
-    lines.push('Lending and borrowing carry **liquidation risk**. Monitor your health factor closely.');
+    lines.push('> :star2: **Lending Rewards** available on [Rhea Lending!](https://app.rhea.finance/lending)');
 
     return lines.join('\n');
   }
@@ -139,14 +126,12 @@ export class LendingController {
     this.lastUpdateTime = new Date(); // Update the timestamp when fetching new data
     
     const stats = await this.service.getGlobalStats();
-    const [bySupplied, byBorrowed, bySupplyApy, byUtilization] = await Promise.all([
+    const [bySupplied, bySupplyApy] = await Promise.all([
       this.service.getTopTokensBySupplied(4),
-      this.service.getTopTokensByBorrowed(4),
       this.service.getTopTokensBySupplyApy(4),
-      this.service.getTopTokensByUtilization(4),
     ]);
 
-    const content = this.buildContent(stats, bySupplied, byBorrowed, bySupplyApy, byUtilization);
+    const content = this.buildContent(stats, bySupplied, [], bySupplyApy, []);
     const existing = await this.findPinnedTLDR(channel);
 
     if (existing) {
