@@ -1,18 +1,27 @@
 # near-defi-bot
 
 Discord bot for NEARMobile DeFi stats (liquidity pools, lending/borrowing APRs, etc.)  
-Posts a TL;DR of TVL, 24h volume, and top pools (by TVL, volume, and APY) to a designated channel and keeps it updated every 30 minutes.
+Posts TL;DRs of TVL, 24h volume, top pools, and lending/borrowing markets to designated channels and keeps them updated every 30 minutes.
 
 ---
 
 ## 🚀 Features
 
+### Liquidity Pools Module
 - Fetches global stats (TVL & 24h volume) from Ref Finance  
 - Retrieves top-N liquidity pools by TVL, 24h volume & APY  
 - Posts a rich Markdown TL;DR in a pinned message  
-- Automatically edits the pinned message on updates or bot restarts  
+
+### Lending & Borrowing Module
+- Fetches lending data from Burrow Finance API
+- Shows top markets by supplied value, borrowed value, and supply APY
+- Displays utilization rates and available liquidity
+- Converts APR to APY with compound interest calculations
+
+### General Features
+- Automatically edits pinned messages on updates or bot restarts  
 - Simple cron-based refresh every 30 minutes  
-- Easy to extend with new modules (lending, borrowing, etc.)  
+- Easy to extend with new modules  
 
 ---
 
@@ -49,7 +58,7 @@ Posts a TL;DR of TVL, 24h volume, and top pools (by TVL, volume, and APY) to a d
 
    ```bash
    cp .env.example .env
-   # then edit .env to set DISCORD_TOKEN & LIQUIDITY_CHANNEL_ID
+   # then edit .env to set DISCORD_TOKEN, LIQUIDITY_CHANNEL_ID, and LENDING_CHANNEL_ID
    ```
 
 4. **Build** TypeScript sources:
@@ -112,14 +121,24 @@ near-defi-bot/
 │       │   │   └── discord-bot.ts
 │       │   ├── main.ts
 │       │   └── modules
-│       │       └── liquidity
-│       │           ├── liquidity.controller.ts
-│       │           ├── liquidity.factory.ts
-│       │           ├── liquidity.service.ts
+│       │       ├── liquidity
+│       │       │   ├── liquidity.controller.ts
+│       │       │   ├── liquidity.factory.ts
+│       │       │   ├── liquidity.service.ts
+│       │       │   ├── types.ts
+│       │       │   └── utils.ts
+│       │       └── lending
+│       │           ├── lending.controller.ts
+│       │           ├── lending.factory.ts
+│       │           ├── lending.service.ts
 │       │           ├── types.ts
 │       │           └── utils.ts
 │       └── test
-│           └── modules/liquidity/liquidity.service.spec.ts
+│           └── modules
+│               ├── liquidity/liquidity.service.spec.ts
+│               └── lending/lending.service.spec.ts
+├── scripts
+│   └── test-lending.ts
 ├── ecosystem.config.js
 ├── generate_report.sh
 ├── jest.config.js

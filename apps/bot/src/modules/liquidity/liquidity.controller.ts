@@ -2,11 +2,12 @@
 
 import { TextChannel, Message } from 'discord.js';
 import { LiquidityService } from './liquidity.service';
-import { formatCurrency, formatPercent } from './utils';
+import { formatCurrency, formatPercent, formatUTCTime } from './utils';
 import { Pool } from './types';
 
 export class LiquidityController {
   private readonly messageTag = '# :ocean:・Liquidity Pools TL;DR';
+  private lastUpdateTime: Date = new Date();
 
   constructor(private readonly service: LiquidityService) {}
 
@@ -42,6 +43,8 @@ export class LiquidityController {
   ): string {
     const lines: string[] = [];
     lines.push(this.messageTag);
+    lines.push('');
+    lines.push(`*Last updated: ${formatUTCTime(this.lastUpdateTime.getTime())}*`);
     lines.push('');
     lines.push('**Welcome! All data below is updated in real-time.**  ');
     lines.push('');
@@ -90,6 +93,8 @@ export class LiquidityController {
    * to include TVL, Volume, and APY tables.
    */
   async postOrUpdate(channel: TextChannel): Promise<void> {
+    this.lastUpdateTime = new Date(); // Update the timestamp when fetching new data
+    
     const stats = await this.service.getGlobalStats();
     const [byTvl, byVol, byApy] = await Promise.all([
       this.service.getTopPoolsByTvl(4),
