@@ -5,7 +5,7 @@ import { LendingToken, LendingStats, BurrowApiResponse } from './types';
 import { formatTokenSymbol, aprToApy } from './utils';
 
 export class LendingService {
-  private readonly apiBase = 'https://api.data-service.burrow.finance/burrow';
+  private readonly apiBase = 'https://apidata.rhea.finance/burrow';
   
   // Tokens to track for lending data
   private readonly tokens = [
